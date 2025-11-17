@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EA Trainer — Final Fixed Version</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+    --brand:#2563eb;
+    --brand-dark:#1e3a8a;
+    --surface:#ffffff;
+    --muted:#6b7280;
+    --border:#e2e8f0;
+    --shadow:0 15px 35px rgba(15,23,42,0.12);
+}
+* { box-sizing:border-box; }
+body {
+    font-family:"Inter", "Segoe UI", Arial, sans-serif;
+    background:linear-gradient(135deg,#eef2ff,#f8fafc);
+    margin:0;
+    color:#0f172a;
+    line-height:1.6;
+}
+header {
+    background:var(--brand);
+    color:white;
+    padding:20px;
+    box-shadow:var(--shadow);
+}
+.header-bar {
+    max-width:1100px;
+    margin:0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+}
+.top-actions {
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+@keyframes floatPulse {
+    0%,100% { transform:translateY(0); }
+    50% { transform:translateY(-4px); }
+}
+.header-title {
+    font-size:28px;
+    letter-spacing:.02em;
+    font-weight:700;
+}
+.utilities {
+    max-width:1100px;
+    margin:20px auto 10px;
+    background:var(--surface);
+    border-radius:18px;
+    padding:18px 24px;
+    box-shadow:var(--shadow);
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:16px;
+}
+.file-buttons {
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+    align-items:center;
+}
+.file-buttons button,
+.top-actions button,
+.flash-controls button,
+.modal-actions button,
+#topMenu button,
+#quizOptions button,
+#exportBtn {
+    border:none;
+    border-radius:999px;
+    padding:11px 22px;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    transition:transform .1s ease, box-shadow .2s ease, background .2s ease;
+}
+.file-buttons button,
+.top-actions button,
+#exportBtn {
+    background:var(--brand);
+    color:white;
+    box-shadow:0 10px 20px rgba(37,99,235,0.25);
+}
+.top-actions button {
+    background:#eef2ff;
+    color:var(--brand-dark);
+    border:1px solid rgba(255,255,255,0.35);
+}
+#projectTrigger {
+    animation:none;
+}
+#projectTrigger:hover {
+    animation:floatPulse 1.8s ease-in-out infinite;
+}
+.file-buttons button:hover,
+#exportBtn:hover,
+.flash-controls button:hover,
+.modal-actions button:hover,
+#topMenu button:hover,
+#quizOptions button:hover {
+    transform:translateY(-1px);
+}
+#exportBtn:disabled {
+    opacity:.35;
+    cursor:not-allowed;
+    box-shadow:none;
+}
+#exportBtn {
+    background:#10b981;
+    color:white;
+    border:1px solid #059669;
+    box-shadow:0 10px 25px rgba(16,185,129,0.35);
+}
+#exportBtn:hover:not(:disabled) {
+    background:#0ea373;
+}
+#topMenu {
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:center;
+}
+#topMenu button {
+    background:#e0e7ff;
+    color:#312e81;
+    min-width:140px;
+}
+#topMenu button.active {
+    background:var(--brand);
+    color:white;
+}
+.status-pill {
+    margin-left:auto;
+    font-size:14px;
+    font-weight:600;
+    color:var(--muted);
+}
+.modeArea {
+    max-width:1100px;
+    margin:0 auto 30px;
+}
+.hidden { display:none; }
+.panel-grid {
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:24px;
+}
+@media (max-width:1024px){
+    .panel-grid { grid-template-columns:1fr; }
+}
+.card-shell,
+.quiz-shell,
+.notes-shell {
+    background:var(--surface);
+    border-radius:24px;
+    padding:24px;
+    box-shadow:var(--shadow);
+    min-height:320px;
+}
+.card-shell { perspective:1400px; }
+.card-head,
+.quiz-head {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:15px;
+    color:var(--muted);
+    margin-bottom:10px;
+}
+#flashcard {
+    position:relative;
+    min-height:320px;
+    border-radius:24px;
+    perspective:1400px;
+}
+#flashInner {
+    position:relative;
+    min-height:320px;
+    border-radius:24px;
+    background:radial-gradient(circle at top, #f8fafc, #fff);
+    transform-style:preserve-3d;
+    -webkit-transform-style:preserve-3d;
+    transition:height .3s ease;
+    cursor:pointer;
+    box-shadow:0 20px 45px rgba(15,23,42,0.12);
+    padding:0;
+    overflow:hidden;
+}
+#flashFront, #flashBack {
+    position:absolute;
+    inset:0;
+    padding:30px;
+    overflow-wrap:break-word;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    transition:transform .7s ease;
+}
+#flashFront {
+    transform:rotateY(0deg);
+}
+#flashBack {
+    transform:rotateY(180deg);
+}
+#flashInner.flipped #flashFront {
+    transform:rotateY(-180deg);
+}
+#flashInner.flipped #flashBack {
+    transform:rotateY(0deg);
+}
+.flash-question {
+    font-size:20px;
+    font-weight:600;
+    margin-bottom:16px;
+    line-height:1.6;
+}
+.option-line {
+    margin-bottom:6px;
+    line-height:1.6;
+}
+.answer-pill {
+    display:inline-block;
+    padding:6px 12px;
+    background:#dcfce7;
+    color:#166534;
+    border-radius:999px;
+    font-weight:600;
+}
+.flash-controls,
+.quiz-controls {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin-top:26px;
+}
+.flash-controls button,
+.quiz-controls button {
+    background:#e2e8f0;
+    color:#0f172a;
+}
+.flash-controls button.accent {
+    margin-left:auto;
+    background:var(--brand-dark);
+    color:white;
+}
+.jump-control {
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+.jump-control input {
+    width:100px;
+    padding:8px 10px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    font-size:15px;
+    font-family:inherit;
+    background:#fff;
+}
+.jump-control input:disabled {
+    opacity:.4;
+}
+.translate-status {
+    font-size:13px;
+    color:var(--muted);
+    margin-top:10px;
+}
+.translate-status.inline {
+    margin-top:0;
+    display:inline-block;
+    margin-left:8px;
+}
+.side-panel {
+    background:var(--surface);
+    border-radius:24px;
+    padding:24px;
+    box-shadow:var(--shadow);
+}
+.side-panel h4 { margin-top:0; }
+.quiz-shell {
+    margin-bottom:20px;
+}
+#quizQuestion {
+    font-size:20px;
+    font-weight:600;
+    margin-bottom:16px;
+}
+#quizOptions {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+#quizOptions button {
+    text-align:left;
+    background:#eff6ff;
+    color:#1e3a8a;
+}
+#quizOptions button.correct {
+    background:#dcfce7;
+    color:#166534;
+}
+#quizOptions button.incorrect {
+    background:#fee2e2;
+    color:#991b1b;
+}
+#quizExplain {
+    margin-top:18px;
+    padding:16px;
+    border-radius:16px;
+    background:#f8fafc;
+    min-height:80px;
+    color:#0f172a;
+}
+.notes-shell h3 {
+    margin-top:0;
+}
+.note-card {
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:12px;
+    background:#fafcff;
+}
+.note-card__title {
+    font-weight:700;
+    color:var(--brand);
+    margin-bottom:8px;
+}
+.note-card__question {
+    font-size:14px;
+    color:var(--muted);
+    margin-bottom:10px;
+}
+.note-card__note {
+    font-size:15px;
+    line-height:1.5;
+}
+.empty-state {
+    text-align:center;
+    color:var(--muted);
+    padding:30px 10px;
+}
+.modal {
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,0.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:10;
+}
+.modal.show { display:flex; }
+.modal-content {
+    background:white;
+    border-radius:24px;
+    padding:24px;
+    max-width:520px;
+    width:90%;
+    box-shadow:var(--shadow);
+}
+.modal-content h3 {
+    margin-top:0;
+}
+.modal textarea {
+    width:100%;
+    min-height:180px;
+    border-radius:16px;
+    border:1px solid var(--border);
+    padding:14px;
+    font-size:16px;
+    resize:vertical;
+    font-family:inherit;
+}
+.modal-actions {
+    display:flex;
+    justify-content:flex-end;
+    gap:12px;
+    margin-top:16px;
+}
+.modal-actions button:first-child {
+    background:#f1f5f9;
+    color:#0f172a;
+}
+.modal-actions button:last-child {
+    background:var(--brand);
+    color:white;
+}
+footer {
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    margin-bottom:30px;
+}
+</style>
+</head>
+<body>
+<header>
+    <div class="header-bar">
+        <div class="header-title">EA Trainer · Flashcards · Quiz · Notebook</div>
+        <div class="top-actions">
+            <button id="csvTrigger">Import CSV</button>
+            <button id="projectTrigger">Load Project</button>
+            <button id="exportBtn" onclick="exportProject()" disabled>Export Project</button>
+        </div>
+    </div>
+</header>
+<section class="utilities">
+    <div class="file-buttons">
+        <button id="languageToggle" type="button">中文</button>
+        <div id="topMenu" class="inline-menu">
+            <button data-mode="flash" class="active">Flashcards</button>
+            <button data-mode="quiz">Quiz</button>
+            <button data-mode="notebook">Notebook</button>
+        </div>
+    </div>
+    <div class="status-pill" id="dataStatus">No dataset loaded.</div>
+</section>
+<section id="flashMode" class="modeArea">
+    <div class="panel-grid">
+        <div class="card-shell">
+            <div class="card-head">
+                <span>Flashcard</span>
+                <span id="flashProgress">0 / 0</span>
+            </div>
+            <div id="flashcard" onclick="flipFlashcard()">
+                <div id="flashInner">
+                    <div id="flashFront"></div>
+                    <div id="flashBack"></div>
+                </div>
+            </div>
+            <div class="flash-controls">
+                <button onclick="prevQ()">Prev</button>
+                <button onclick="nextQ()">Next</button>
+                <div class="jump-control">
+                    <input type="number" id="flashJump" min="1" placeholder="Go to #" onkeydown="jumpOnEnter(event, 'flashJump')">
+                    <button type="button" onclick="jumpToQuestion('flashJump')">Go</button>
+                </div>
+                <button class="accent" onclick="openNotebook()">Notebook</button>
+            </div>
+        </div>
+        <div class="side-panel">
+            <h4>Quick Notebook</h4>
+            <div id="flashNotebookView" class="note-card__note">No notes yet.</div>
+            <hr style="margin:24px 0;border:none;border-top:1px solid var(--border);">
+            <h4>Helpful Tips</h4>
+            <p style="color:var(--muted);">Flip the card or jump into Quiz mode to check your understanding. Use Export to capture your question set and notes for review later.</p>
+        </div>
+    </div>
+</section>
+<section id="quizMode" class="modeArea hidden">
+    <div class="quiz-shell">
+        <div class="quiz-head">
+            <span>Quiz Mode</span>
+            <span id="quizProgress">0 / 0</span>
+        </div>
+        <div id="quizQuestion">Load a CSV to practice.</div>
+        <div id="quizOptions"></div>
+        <div id="quizExplain"></div>
+        <div class="quiz-controls">
+            <button onclick="prevQ()">Prev</button>
+            <button onclick="nextQ()">Next</button>
+            <div class="jump-control">
+                <input type="number" id="quizJump" min="1" placeholder="Go to #" onkeydown="jumpOnEnter(event, 'quizJump')">
+                <button type="button" onclick="jumpToQuestion('quizJump')">Go</button>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="notebookMode" class="modeArea hidden">
+    <div class="notes-shell">
+        <div class="quiz-head">
+            <span>Notebook View</span>
+            <span id="noteCount">0 Notes</span>
+        </div>
+        <div id="notebookViewContainer" class="empty-state">No notes yet.</div>
+    </div>
+</section>
+<div id="noteModal" class="modal">
+    <div class="modal-content">
+        <h3>Notebook — Question <span id="modalQId"></span></h3>
+        <textarea id="noteText" placeholder="Capture key reminders, traps, or mnemonics."></textarea>
+        <div class="modal-actions">
+            <button type="button" onclick="closeNotebook()">Cancel</button>
+            <button type="button" onclick="saveNoteFromModal()">Save Note</button>
+        </div>
+    </div>
+</div>
+<input type="file" id="csvFile" accept=".csv" hidden>
+<input type="file" id="projectFile" accept=".json" hidden>
+<footer>Built for quick EA refresh sessions.</footer>
+<script>
+const STORAGE_KEY = "ea_trainer_notes";
+let questions = [];
+let questionMap = new Map();
+let notes = {};
+let index = 0;
+let flipped = false;
+let mode = "flash";
+let currentDatasetLabel = "";
+let currentDatasetKey = "";
+let languageMode = "en";
+const csvInput = document.getElementById("csvFile");
+const projectInput = document.getElementById("projectFile");
+const exportBtn = document.getElementById("exportBtn");
+const noteModal = document.getElementById("noteModal");
+const noteTextarea = document.getElementById("noteText");
+const dataStatus = document.getElementById("dataStatus");
+const languageToggleBtn = document.getElementById("languageToggle");
+
+(function init(){
+    document.querySelectorAll('#topMenu button').forEach(btn => {
+        btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+    });
+    document.getElementById('csvTrigger').addEventListener('click', () => csvInput.click());
+    document.getElementById('projectTrigger').addEventListener('click', () => projectInput.click());
+    csvInput.addEventListener('change', handleCSVUpload);
+    projectInput.addEventListener('change', handleProjectUpload);
+    if(languageToggleBtn){
+        languageToggleBtn.addEventListener('click', toggleLanguage);
+    }
+    noteModal.addEventListener('click', evt => {
+        if(evt.target === noteModal) closeNotebook();
+    });
+    updateLanguageToggle();
+    render();
+})();
+
+function switchMode(target){
+    mode = target;
+    document.querySelectorAll('.modeArea').forEach(sec => sec.classList.add('hidden'));
+    document.getElementById(target + 'Mode').classList.remove('hidden');
+    document.querySelectorAll('#topMenu button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === target);
+    });
+    render();
+}
+
+function toggleLanguage(){
+    languageMode = languageMode === 'en' ? 'zh' : 'en';
+    updateLanguageToggle();
+    render();
+}
+
+function updateLanguageToggle(){
+    if(!languageToggleBtn) return;
+    if(languageMode === 'en'){
+        languageToggleBtn.textContent = '中文';
+        languageToggleBtn.title = 'Switch question/explanation to Chinese';
+    } else {
+        languageToggleBtn.textContent = 'English';
+        languageToggleBtn.title = 'Switch question/explanation to English';
+    }
+}
+
+function handleCSVUpload(evt){
+    const file = evt.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            loadQuestionsFromCSV(reader.result);
+            setDatasetIdentity(deriveDatasetLabel(file.name));
+            setDataStatus(`${questions.length} questions loaded from ${file.name}.`);
+            switchMode('flash');
+        } catch (error) {
+            alert('Unable to read CSV file. Please confirm the format.');
+            console.error(error);
+        }
+    };
+    reader.readAsText(file);
+    evt.target.value = "";
+}
+
+function handleProjectUpload(evt){
+    const file = evt.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const payload = JSON.parse(reader.result);
+            if(!Array.isArray(payload.questions) || !payload.questions.length){
+                throw new Error('Missing questions');
+            }
+            questions = payload.questions;
+            questionMap = new Map(questions.map(q => [q.id, q]));
+            index = 0;
+            flipped = false;
+            const datasetName = (payload.datasetName && payload.datasetName.trim()) ? payload.datasetName : 'project';
+            setDatasetIdentity(datasetName, { loadStoredNotes: false });
+            notes = (payload.notes && typeof payload.notes === 'object') ? payload.notes : {};
+            persistNotes();
+            exportBtn.disabled = false;
+            setDataStatus(`Project loaded (${questions.length} questions, ${Object.keys(notes).length} notes).`);
+            switchMode('flash');
+        } catch (err) {
+            alert('Unable to load project file.');
+            console.error(err);
+        }
+    };
+    reader.readAsText(file);
+    evt.target.value = "";
+}
+
+function setDataStatus(message){
+    dataStatus.textContent = message;
+}
+
+function loadQuestionsFromCSV(text){
+    const rows = parseCSV(text);
+    if(!rows.length){
+        throw new Error('CSV is empty');
+    }
+    const header = rows.shift().map(h => h.trim());
+    const idx = {
+        id: header.indexOf('Question #'),
+        question: header.indexOf('Question Text'),
+        choiceLetter: header.indexOf('Choice'),
+        choiceText: header.indexOf('Choice Text'),
+        explanation: header.indexOf('Explanation'),
+        isCorrect: header.indexOf('Is Correct')
+    };
+    if(Object.values(idx).some(value => value === -1)){
+        throw new Error('CSV headers missing required columns');
+    }
+    const grouped = {};
+    rows.forEach(row => {
+        const rawId = row[idx.id];
+        if(!rawId || isNaN(rawId)) return;
+        const qid = parseInt(rawId, 10);
+        if(!grouped[qid]){
+            grouped[qid] = {
+                id: qid,
+                question: row[idx.question] || '',
+                choices: [],
+                explanation: row[idx.explanation] || '',
+                correct: ''
+            };
+        }
+        grouped[qid].choices.push({
+            letter: (row[idx.choiceLetter] || '').trim(),
+            text: row[idx.choiceText] || ''
+        });
+        if(String(row[idx.isCorrect]).trim().toLowerCase() === 'true'){
+            grouped[qid].correct = (row[idx.choiceLetter] || '').trim();
+            grouped[qid].explanation = row[idx.explanation] || grouped[qid].explanation;
+        }
+    });
+    questions = Object.values(grouped).sort((a,b) => a.id - b.id);
+    questionMap = new Map(questions.map(q => [q.id, q]));
+    index = 0;
+    flipped = false;
+    exportBtn.disabled = questions.length === 0;
+}
+
+function parseCSV(text){
+    const rows = [];
+    let current = [];
+    let value = '';
+    let inQuotes = false;
+    for(let i=0;i<text.length;i++){
+        const char = text[i];
+        if(char === '"'){
+            if(inQuotes && text[i+1] === '"'){
+                value += '"';
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if(char === ',' && !inQuotes){
+            current.push(value);
+            value = '';
+        } else if((char === '\n' || char === '\r') && !inQuotes){
+            if(char === '\r' && text[i+1] === '\n') i++;
+            current.push(value);
+            rows.push(current);
+            current = [];
+            value = '';
+        } else {
+            value += char;
+        }
+    }
+    if(value || current.length){
+        current.push(value);
+        rows.push(current);
+    }
+    return rows.filter(row => row.some(cell => cell && cell.trim() !== ''));
+}
+
+function flipFlashcard(){
+    if(!questions.length) return;
+    flipped = !flipped;
+    updateFlashcardFace();
+}
+
+function updateFlashcardFace(){
+    const inner = document.getElementById('flashInner');
+    if(inner){
+        inner.classList.toggle('flipped', flipped);
+    }
+    adjustFlashcardHeight();
+}
+
+function adjustFlashcardHeight(){
+    const outer = document.getElementById('flashcard');
+    const inner = document.getElementById('flashInner');
+    const front = document.getElementById('flashFront');
+    const back = document.getElementById('flashBack');
+    if(!outer || !inner || !front || !back) return;
+    requestAnimationFrame(() => {
+        const maxHeight = Math.max(front.scrollHeight, back.scrollHeight, 320);
+        inner.style.height = maxHeight + 'px';
+        outer.style.minHeight = maxHeight + 'px';
+    });
+}
+
+function prevQ(){
+    if(index > 0){
+        index--;
+        flipped = false;
+        render();
+    }
+}
+
+function nextQ(){
+    if(questions.length === 0) return;
+    if(index < questions.length - 1){
+        index++;
+    } else {
+        index = 0;
+    }
+    flipped = false;
+    render();
+}
+
+function jumpToQuestion(inputId){
+    if(!questions.length) return;
+    const input = document.getElementById(inputId);
+    if(!input) return;
+    const target = parseInt(input.value, 10);
+    if(Number.isNaN(target)) return;
+    if(target < 1 || target > questions.length) return;
+    index = target - 1;
+    flipped = false;
+    input.value = '';
+    input.blur();
+    render();
+}
+
+function jumpOnEnter(event, inputId){
+    if(event.key === 'Enter'){
+        event.preventDefault();
+        jumpToQuestion(inputId);
+    }
+}
+
+function openNotebook(){
+    if(!questions.length) return;
+    const q = questions[index];
+    document.getElementById('modalQId').textContent = q.id;
+    noteTextarea.value = notes[q.id] || '';
+    noteModal.classList.add('show');
+    noteTextarea.focus();
+}
+
+function closeNotebook(){
+    noteModal.classList.remove('show');
+}
+
+function saveNoteFromModal(){
+    if(!questions.length) return;
+    const q = questions[index];
+    const text = noteTextarea.value.trim();
+    if(text){
+        notes[q.id] = text;
+    } else {
+        delete notes[q.id];
+    }
+    persistNotes();
+    closeNotebook();
+    render();
+}
+
+function persistNotes(){
+    if(!currentDatasetKey) return;
+    localStorage.setItem(getNoteStorageKey(), JSON.stringify(notes));
+}
+
+function exportProject(){
+    if(!questions.length) return;
+    const payload = {
+        exportedAt: new Date().toISOString(),
+        questionCount: questions.length,
+        datasetName: currentDatasetLabel || 'dataset',
+        datasetKey: currentDatasetKey,
+        questions,
+        notes
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const safeName = buildProjectFileName();
+    link.download = safeName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+function render(){
+    if(!questions.length){
+        document.getElementById('flashFront').innerHTML = '<p class="flash-question">Import a CSV to begin.</p>';
+        document.getElementById('flashBack').innerHTML = '';
+        document.getElementById('flashProgress').textContent = '0 / 0';
+        document.getElementById('quizProgress').textContent = '0 / 0';
+        document.getElementById('quizQuestion').textContent = 'Load a CSV to practice.';
+        document.getElementById('quizOptions').innerHTML = '';
+        document.getElementById('quizExplain').textContent = '';
+        document.getElementById('flashNotebookView').textContent = 'No notes yet.';
+        document.getElementById('noteCount').textContent = '0 Notes';
+        document.getElementById('notebookViewContainer').innerHTML = '<div class="empty-state">No notes yet.</div>';
+        updateFlashcardFace();
+        updateJumpInputs(0);
+        return;
+    }
+    const q = questions[index];
+    const total = questions.length;
+    updateJumpInputs(total);
+    const localizedQuestion = getLocalizedText(q, 'question');
+    const localizedExplanation = getLocalizedText(q, 'explanation');
+    const translateFrontNote = (languageMode === 'zh' && localizedQuestion.pending) ? '<div class="translate-status">Translating question…</div>' : '';
+    const translateBackNote = (languageMode === 'zh' && localizedExplanation.pending) ? '<div class="translate-status">Translating explanation…</div>' : '';
+    document.getElementById('flashProgress').textContent = `${index + 1} / ${total}`;
+    document.getElementById('quizProgress').textContent = `${index + 1} / ${total}`;
+    document.getElementById('flashFront').innerHTML = `
+        <div class="flash-question">${escapeHtml(localizedQuestion.text)}</div>
+        <div>${q.choices.map(c => `<div class="option-line"><strong>${c.letter}.</strong> ${escapeHtml(c.text)}</div>`).join('')}</div>
+        ${translateFrontNote}`;
+    document.getElementById('flashBack').innerHTML = `
+        <div class="answer-pill">Correct: ${q.correct}</div>
+        <p style="margin-top:16px;">${escapeHtml(localizedExplanation.text).replace(/\n/g,'<br>')}</p>
+        ${translateBackNote}`;
+    document.getElementById('flashNotebookView').innerHTML = notes[q.id] ? escapeHtml(notes[q.id]).replace(/\n/g,'<br>') : 'No notes yet.';
+    updateFlashcardFace();
+    renderQuiz(q, { question: localizedQuestion, explanation: localizedExplanation });
+    renderNotebookList();
+}
+
+function renderQuiz(q, localized = {}){
+    const quizQuestion = document.getElementById('quizQuestion');
+    const quizOptions = document.getElementById('quizOptions');
+    const quizExplain = document.getElementById('quizExplain');
+    const qText = localized.question ? localized.question.text : q.question;
+    const questionNote = (languageMode === 'zh' && localized.question && localized.question.pending) ? '<div class="translate-status">Translating question…</div>' : '';
+    quizQuestion.innerHTML = `<div class="flash-question">${escapeHtml(qText)}</div>${questionNote}`;
+    quizOptions.innerHTML = '';
+    quizExplain.innerHTML = '';
+    q.choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.textContent = `${choice.letter}. ${choice.text}`;
+        btn.addEventListener('click', () => {
+            quizOptions.querySelectorAll('button').forEach(b => b.classList.remove('correct','incorrect'));
+            const isCorrect = choice.letter === q.correct;
+            btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+            const explanationText = localized.explanation ? localized.explanation.text : q.explanation;
+            quizExplain.innerHTML = `<strong>${isCorrect ? 'Great job!' : 'Review this one:'}</strong> ${escapeHtml(explanationText).replace(/\n/g,'<br>')}`;
+            if(languageMode === 'zh' && localized.explanation && localized.explanation.pending){
+                quizExplain.innerHTML += '<span class="translate-status inline">Translating…</span>';
+            }
+        });
+        quizOptions.appendChild(btn);
+    });
+}
+
+function renderNotebookList(){
+    const container = document.getElementById('notebookViewContainer');
+    if(!Object.keys(notes).length){
+        container.innerHTML = '<div class="empty-state">No notes yet.</div>';
+        document.getElementById('noteCount').textContent = '0 Notes';
+        return;
+    }
+    const entries = Object.entries(notes).filter(([,text]) => text && text.trim().length);
+    if(!entries.length){
+        container.innerHTML = '<div class="empty-state">No notes yet.</div>';
+        document.getElementById('noteCount').textContent = '0 Notes';
+        return;
+    }
+    entries.sort((a,b) => Number(a[0]) - Number(b[0]));
+    document.getElementById('noteCount').textContent = `${entries.length} Note${entries.length === 1 ? '' : 's'}`;
+    container.innerHTML = entries.map(([id, text]) => {
+        const q = questionMap.get(Number(id));
+        const prompt = q ? escapeHtml(q.question) : `Question ${id}`;
+        return `<div class="note-card"><div class="note-card__title">Question ${id}</div><div class="note-card__question">${prompt}</div><div class="note-card__note">${escapeHtml(text).replace(/\n/g,'<br>')}</div></div>`;
+    }).join('');
+}
+
+function getLocalizedText(question, field){
+    if(languageMode !== 'zh' || !question){
+        return { text: question && question[field] ? question[field] : '', pending:false };
+    }
+    const original = question[field] || '';
+    question.translations = question.translations || {};
+    question.translations[field] = question.translations[field] || {};
+    const cache = question.translations[field]['zh'];
+    if(cache){
+        return { text: cache, pending:false };
+    }
+    if(!question.translations[field].pending){
+        question.translations[field].pending = true;
+        translateText(original, 'zh-CN')
+            .then(result => {
+                question.translations[field]['zh'] = result || original;
+                question.translations[field].pending = false;
+                if(languageMode === 'zh'){
+                    render();
+                }
+            })
+            .catch(err => {
+                question.translations[field].pending = false;
+                console.error('Translation failed', err);
+            });
+    }
+    return { text: original, pending:true };
+}
+
+async function translateText(text, targetLang = 'zh-CN'){
+    if(!text) return '';
+    const endpoint = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    const response = await fetch(endpoint);
+    if(!response.ok){
+        throw new Error('Translate request failed');
+    }
+    const payload = await response.json();
+    if(!Array.isArray(payload)) return text;
+    const segments = payload[0];
+    if(!Array.isArray(segments)) return text;
+    return segments.map(part => part[0]).join('');
+}
+
+function updateJumpInputs(total){
+    const flashJump = document.getElementById('flashJump');
+    const quizJump = document.getElementById('quizJump');
+    [flashJump, quizJump].forEach(input => {
+        if(!input) return;
+        if(total){
+            input.disabled = false;
+            input.setAttribute('max', total);
+            input.placeholder = `Go to 1-${total}`;
+        } else {
+            input.disabled = true;
+            input.value = '';
+            input.removeAttribute('max');
+            input.placeholder = 'Go to #';
+        }
+    });
+}
+
+function escapeHtml(str){
+    if(str === undefined || str === null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function deriveDatasetLabel(name){
+    if(!name) return 'dataset';
+    const base = name.replace(/\.[^/.]+$/, '').trim();
+    return base || 'dataset';
+}
+
+function sanitizeDatasetKey(value){
+    return (value || 'dataset')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'dataset';
+}
+
+function setDatasetIdentity(label, { loadStoredNotes = true } = {}){
+    const derived = deriveDatasetLabel(label);
+    currentDatasetLabel = derived;
+    currentDatasetKey = sanitizeDatasetKey(derived);
+    if(loadStoredNotes){
+        notes = loadNotesFromStorage();
+    }
+}
+
+function loadNotesFromStorage(){
+    if(!currentDatasetKey) return {};
+    try {
+        return JSON.parse(localStorage.getItem(getNoteStorageKey()) || "{}");
+    } catch (err) {
+        return {};
+    }
+}
+
+function getNoteStorageKey(){
+    return `${STORAGE_KEY}_${currentDatasetKey || 'default'}`;
+}
+
+function buildProjectFileName(){
+    const base = (currentDatasetLabel || 'dataset')
+        .replace(/[^a-zA-Z0-9-_]+/g, '_')
+        .replace(/_{2,}/g, '_')
+        .replace(/^_+|_+$/g, '') || 'dataset';
+    return `${base}_project.json`;
+}
+</script>
+</body>
+</html>
